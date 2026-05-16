@@ -34,7 +34,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Artifacts
-        path: dist/
+        path: build/libs/
         
     - name: Archive mapping.txt
       uses: actions/upload-artifact@v4
