@@ -17,27 +17,35 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Set up JDK 22
+    # 用 Java 21 来运行 Gradle，保证 Gradle 自身能够正常解析不报 BUG
+    - name: Set up JDK 21 for Gradle
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+
+    # 同时下载好 Java 22，供 Toolchain 编译代码时调用
+    - name: Set up JDK 22 for Toolchain
       uses: actions/setup-java@v4
       with:
         java-version: '22'
         distribution: 'temurin'
-        cache: gradle
+
+    # 允许 Gradle 自动发现系统里安装的多个 JDK
+    - name: Configure Gradle Toolchains
+      run: |
+        mkdir -p ~/.gradle
+        echo "org.gradle.java.installations.auto-detect=true" >> ~/.gradle/gradle.properties
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
       
+    # 强制指定用 Java 22 进行编译编译，并跳过格式检查
     - name: Build with Gradle
-      run: ./gradlew build -Pmod_version="1.21.1-custom" -x checkstyleMain -x checkstyleMixin
+      run: ./gradlew build -Pmod_version="1.21.1-custom" -Porg.gradle.java.installations.auto-detect=true -x checkstyleMain -x checkstyleMixin
 
     - name: Archive Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: Artifacts
         path: build/libs/
-        
-    - name: Archive mapping.txt
-      uses: actions/upload-artifact@v4
-      with:
-        name: Mappings
-        path: mapping/
