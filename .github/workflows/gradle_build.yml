@@ -1,6 +1,3 @@
-# This workflow will build a Java project with Gradle
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
-
 name: Java CI with Gradle
 
 on:
@@ -9,7 +6,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -17,21 +13,20 @@ jobs:
       with:
         fetch-depth: 0
 
-    # 用 Java 21 来运行 Gradle，保证 Gradle 自身能够正常解析不报 BUG
-    - name: Set up JDK 21 for Gradle
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-
-    # 同时下载好 Java 22，供 Toolchain 编译代码时调用
+    # 第 1 步：先装 Java 22（默默下载好，供项目内部按需调用）
     - name: Set up JDK 22 for Toolchain
       uses: actions/setup-java@v4
       with:
         java-version: '22'
         distribution: 'temurin'
 
-    # 允许 Gradle 自动发现系统里安装的多个 JDK
+    # 第 2 步：后装 Java 21（覆盖系统默认值，保证 Gradle 本身用 21 启动）
+    - name: Set up JDK 21 for Gradle
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+
     - name: Configure Gradle Toolchains
       run: |
         mkdir -p ~/.gradle
@@ -40,9 +35,8 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
       
-    # 强制指定用 Java 22 进行编译编译，并跳过格式检查
     - name: Build with Gradle
-      run: ./gradlew build -Pmod_version="1.21.1-custom" -Porg.gradle.java.installations.auto-detect=true -x checkstyleMain -x checkstyleMixin
+      run: ./gradlew build -Pmod_version="1.21.1-custom" -x checkstyleMain -x checkstyleMixin
 
     - name: Archive Artifacts
       uses: actions/upload-artifact@v4
